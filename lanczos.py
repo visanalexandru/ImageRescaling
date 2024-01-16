@@ -54,6 +54,21 @@ def interpolate_lanczos(signal, at, a):
     return result
 
 
+def lanczos_kernel2(x, y, a):
+    """
+    Applies the 2d lanczos kernel for the given values.
+
+    L(x, y) = L(x)*L(y)
+
+    See lanczos_kernel2_example() for an example.
+    """
+
+    l_x = lanczos_kernel(x, a)
+    l_y = lanczos_kernel(y, a)
+
+    return l_x * l_y
+
+
 # Examples:
 
 
@@ -102,6 +117,25 @@ def lanczos_interpolate_example():
     plt.show()
 
 
+def lanczos_kernel2_example():
+    ox = np.linspace(-10, 10, 1000)
+    oy = np.linspace(-10, 10, 1000)
+
+    a = 30
+    x_coords, y_coords = np.meshgrid(ox, oy)
+
+    lanczos = lanczos_kernel2(x_coords, y_coords, a)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(
+        x_coords, y_coords, lanczos, linewidth=0, antialiased=True, cmap=plt.cm.coolwarm
+    )
+    ax.set_xlim(-3, 3)
+    ax.set_ylim(-3, 3)
+    plt.show()
+
+
 if __name__ == "__main__":
     lanczos_kernel_example()
     lanczos_interpolate_example()
+    lanczos_kernel2_example()
