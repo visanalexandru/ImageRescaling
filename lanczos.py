@@ -42,16 +42,15 @@ def interpolate_lanczos(signal, at, a):
     for x_index, x in enumerate(at):
         floor_x = int(np.floor(x))
 
-        for i in range(floor_x - a + 1, floor_x + a + 1):
-            contribution = lanczos_kernel(np.array(x - i), a)
+        i = np.array(range(floor_x - a + 1, floor_x + a + 1))
+        contributions = lanczos_kernel(x - i, a)
 
-            # i may be out of the signal's bounds.
-            # Various methods may be used in this situation.
-            # We choose to clamp i.
-            i = max(i, 0)
-            i = min(i, len(signal) - 1)
+        # i may be out of the signal's bounds.
+        # Various methods may be used in this situation.
+        # We choose to clip i.
+        si = signal[np.clip(i, 0, len(signal) - 1)]
+        result[x_index] += np.sum(si * contributions)
 
-            result[x_index] += contribution * signal[i]
     return result
 
 
