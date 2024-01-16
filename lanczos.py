@@ -38,6 +38,9 @@ def interpolate_lanczos(signal, at, a):
     See lanczos_interpolate_example() for an example.
     """
 
+    assert type(signal) == np.ndarray
+    assert signal.ndim == 1
+
     result = np.zeros_like(at)
     for x_index, x in enumerate(at):
         floor_x = int(np.floor(x))
