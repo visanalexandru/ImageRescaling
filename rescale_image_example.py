@@ -17,44 +17,35 @@ def calculate_fft(image):
     return 20 * np.log10(np.abs(np.fft.fftshift(np.fft.fft2(image))))
 
 
-def rescale_rgb_image(image, new_height, new_width):
-    # Get the dimension and channels of original images
-    old_height = image.shape[0]
-    old_width = image.shape[1]
-    ch_number = image.shape[2]
-
-    upscaled_channels = []
-    for channel in range(ch_number):
-        at_x = np.linspace(0, old_width, new_width)
-        at_y = np.linspace(0, old_height, new_height)
-        at_x, at_y = np.meshgrid(at_x, at_y)
-
-        # Apply Lanczos interpolation to each channel
-        upscaled_channel = lanczos.interpolate_lanczos2_fast(
-            image[:, :, channel], at_x, at_y, 2
-        )
-        upscaled_channel = np.clip(upscaled_channel, 0, 255)
-        upscaled_channels.append(upscaled_channel)
-
-    # Stack the upscaled channels
-    upscaled_image = (np.stack(upscaled_channels, axis=-1)).astype(np.uint8)
-
-    return upscaled_image
-
-
 def rescale_greyscale_image(image, new_height, new_width):
-    # Get the dimension and channels of original images
-    old_height = image.shape[0]
-    old_width = image.shape[1]
+    # Get the dimension of original image
+    old_height, old_width = image.shape
 
     at_x = np.linspace(0, old_width, new_width)
     at_y = np.linspace(0, old_height, new_height)
     at_x, at_y = np.meshgrid(at_x, at_y)
 
-    # Apply Lanczos interpolation to each channel
+    # Apply Lanczos interpolation
     upscaled_image = lanczos.interpolate_lanczos2_fast(image, at_x, at_y, 2)
     upscaled_image = np.clip(upscaled_image, 0, 255)
     upscaled_image = upscaled_image.astype(np.uint8)
+
+    return upscaled_image
+
+
+def rescale_rgb_image(image, new_height, new_width):
+    # Get number of channels for original image
+    ch_number = image.shape[2]
+
+    upscaled_channels = []
+    for channel in range(ch_number):
+        # Apply Lanczos interpolation to each channel
+        upscaled_channel = rescale_greyscale_image(image[:, :, channel], new_height, new_width)
+        upscaled_channel = np.clip(upscaled_channel, 0, 255)
+        upscaled_channels.append(upscaled_channel)
+
+    # Stack the upscaled channels
+    upscaled_image = (np.stack(upscaled_channels, axis=-1)).astype(np.uint8)
 
     return upscaled_image
 
@@ -80,7 +71,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Greyscale example
-    image = load_array_image(input_image_path, "greyscale")
+    image = load_array_image(input_image_path,  mode="greyscale")
     fft_original = calculate_fft(image)
 
     upscaled = rescale_greyscale_image(image, new_height, new_width)
