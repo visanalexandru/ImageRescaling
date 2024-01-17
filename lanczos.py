@@ -19,10 +19,9 @@ def lanczos_kernel(x, a):
     assert type(x) == np.ndarray
     assert isinstance(a, numbers.Number)
 
-    result = np.zeros_like(x)
-    mask = np.logical_and(x > -a, x < a)
-    in_range = x[mask]
-    result[mask] = np.sinc(in_range) * np.sinc(in_range / a)
+    result = np.sinc(x) * np.sinc(x / a)
+    result[x <= -a] = 0
+    result[x >= a] = 0
 
     return result
 
