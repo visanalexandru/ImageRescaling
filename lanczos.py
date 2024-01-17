@@ -40,6 +40,8 @@ def interpolate_lanczos(signal, at, a):
 
     assert type(signal) == np.ndarray
     assert signal.ndim == 1
+    assert type(at) == np.ndarray
+    assert at.ndim == 1
 
     result = np.zeros_like(at)
     for x_index, x in enumerate(at):
@@ -70,6 +72,62 @@ def lanczos_kernel2(x, y, a):
     l_y = lanczos_kernel(y, a)
 
     return l_x * l_y
+
+
+def interpolate_lanczos2(signal, at_x, at_y, a):
+    """
+    Given a two-dimensional signal with samples Sij, for integer values of i and j,
+    compute the values at arbitrary 2d real arguments.
+
+    See lanczos_interpolate2_example() for an example.
+
+    Parameters
+    ----
+    at_x, at_y : np.ndarray
+           A 2d grid representing the x/y coordinates of the points to interpolate.
+
+    See lanczos_interpolate2_example() for an example.
+    """
+
+    assert type(signal) == np.ndarray
+    assert signal.ndim == 2
+
+    assert type(at_x) == np.ndarray
+    assert at_x.ndim == 2
+
+    assert type(at_y) == np.ndarray
+    assert at_y.ndim == 2
+
+    assert at_x.shape == at_y.shape
+
+    sig_height, sig_width = signal.shape
+    height, width = at_x.shape
+    result = np.zeros_like(at_x)
+
+    for y in range(height):
+        for x in range(width):
+            # The current point to evaluate.
+            x_here = at_x[y, x]
+            y_here = at_y[y, x]
+
+            floor_x = int(np.floor(x_here))
+            floor_y = int(np.floor(y_here))
+
+            # Get the coordinates around the current point.
+            i, j = np.meshgrid(
+                range(floor_y - a + 1, floor_y + a + 1),
+                range(floor_x - a + 1, floor_x + a + 1),
+            )
+            contributions = lanczos_kernel2(x_here - j, y_here - i, a)
+
+            # Get the actual signal values around the current point.
+            i = np.clip(i, 0, sig_height - 1)
+            j = np.clip(j, 0, sig_width - 1)
+            in_signal = signal[i, j]
+
+            result[y][x] += np.sum(contributions * in_signal)
+
+    return result
 
 
 # Examples:
@@ -138,7 +196,40 @@ def lanczos_kernel2_example():
     plt.show()
 
 
+def lanczos_interpolate2_example():
+    signal_f = lambda x, y: 80 * np.sin(x * y)
+
+    old_height = 100
+    old_width = 100
+
+    new_height = 120
+    new_width = 300
+
+    oy = np.linspace(-10, 10, old_height)
+    ox = np.linspace(-10, 10, old_width)
+    points_x, points_y = np.meshgrid(ox, oy)
+
+    # Now we get an image of shape (height, width)
+    signal = signal_f(points_x, points_y)
+
+    at_x = np.linspace(0, old_width, new_width)
+    at_y = np.linspace(0, old_height, new_height)
+    at_x, at_y = np.meshgrid(at_x, at_y)
+
+    downsampled = interpolate_lanczos2(signal, at_x, at_y, 2)
+
+    fig, axs = plt.subplots(2, 1)
+
+    axs[0].set_title(f"{old_width}x{old_height}")
+    axs[0].imshow(signal)
+    axs[1].set_title(f"{new_width}x{new_height}")
+    axs[1].imshow(downsampled)
+    fig.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     lanczos_kernel_example()
     lanczos_interpolate_example()
     lanczos_kernel2_example()
+    lanczos_interpolate2_example()
