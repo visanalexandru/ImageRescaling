@@ -191,15 +191,22 @@ def interpolate_lanczos2_fast(signal, at_x, at_y, a):
 
 
 def lanczos_kernel_example():
-    fig, axs = plt.subplots(4, 1)
+    fig, axs = plt.subplots(4, 2)
 
     time = np.linspace(-20, 20, 2000)
-    a_vals = [4, 8, 10, 20]
+    a_vals = [2, 4, 8, 16]
 
     for index, a in enumerate(a_vals):
         lanczos_samples = lanczos_kernel(time, a)
-        axs[index].set_title(f"a = {a}")
-        axs[index].plot(time, lanczos_samples)
+
+        fft = np.abs(np.fft.fftshift(np.fft.fft(lanczos_samples)))
+        freq = (1 / 2) * np.fft.fftshift(np.fft.fftfreq(2000, 1 / 100))
+
+        axs[index, 0].set_title(f"a = {a}")
+        axs[index, 0].plot(time, lanczos_samples)
+
+        axs[index, 1].set_title("Response")
+        axs[index, 1].plot(freq[800:1200], fft[800:1200])
     fig.tight_layout()
     plt.show()
 
