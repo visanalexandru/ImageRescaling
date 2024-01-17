@@ -117,6 +117,7 @@ def interpolate_lanczos2(signal, at_x, at_y, a):
             i, j = np.meshgrid(
                 range(floor_y - a + 1, floor_y + a + 1),
                 range(floor_x - a + 1, floor_x + a + 1),
+                sparse=True,
             )
             contributions = lanczos_kernel2(x_here - j, y_here - i, a)
 
