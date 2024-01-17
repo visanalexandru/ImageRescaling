@@ -1,5 +1,6 @@
-import lanczos
+from skimage.color import rgb2gray
 
+import lanczos
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -8,25 +9,16 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 
-def lanczos_rgb_image_example():
-    # Load the image
-    input_image_path = "bunny.png"
-    original_image = Image.open(input_image_path)
+def calculate_fft(image):
+    return 20 * np.log10(np.abs(np.fft.fftshift(np.fft.fft2(image))))
 
-    # Convert the image to a NumPy array
-    original_array = np.array(original_image)
+
+def lanczos_rgb_image_example(image, new_height, new_width):
 
     # Get the dimension and channels of original images
-    old_height = original_array.shape[0]
-    old_width = original_array.shape[1]
-    ch_number = original_array.shape[2]
-
-    # Define the scale factor for rescaling
-    scale_factor = 0.3
-
-    # Calculate the new size after rescaling
-    new_height = int(old_height * scale_factor)
-    new_width = int(old_width * scale_factor)
+    old_height = image.shape[0]
+    old_width = image.shape[1]
+    ch_number = image.shape[2]
 
     upscaled_channels = []
     for channel in range(ch_number):
@@ -45,15 +37,49 @@ def lanczos_rgb_image_example():
     upscaled = np.stack(upscaled_channels, axis=-1)
     upscaled = upscaled.astype(np.uint8)
 
-    fig, axs = plt.subplots(2, 1)
+    return upscaled
 
-    axs[0].set_title(f"{old_width}x{old_height}")
-    axs[0].imshow(original_array)
-    axs[1].set_title(f"{new_width}x{new_height}")
-    axs[1].imshow(upscaled)
-    fig.tight_layout()
-    plt.show()
+
+def lanczos_grayscale_image_example(image, new_height, new_width):
+    # Get the dimension and channels of original images
+    old_height = image.shape[0]
+    old_width = image.shape[1]
+
+    at_x = np.linspace(0, old_width, new_width)
+    at_y = np.linspace(0, old_height, new_height)
+    at_x, at_y = np.meshgrid(at_x, at_y)
+
+    # Apply Lanczos interpolation to each channel
+    upscaled = lanczos.interpolate_lanczos2(original_array, at_x, at_y, 2)
+    upscaled = np.clip(upscaled, 0, 255)
+    upscaled = upscaled.astype(np.uint8)
+
+    return upscaled
 
 
 if __name__ == "__main__":
-    lanczos_rgb_image_example()
+    # lanczos_rgb_image_example(original_array, new_height, new_width)
+
+    # Load the image
+    input_image_path = 'bunny.png'
+    original_image = Image.open(input_image_path).convert('L')
+    # Convert the image to a NumPy array
+    original_array = np.array(original_image)
+    original_height = original_array.shape[0]
+    original_width = original_array.shape[1]
+    fft_original = calculate_fft(original_array)
+    new_width = 60
+    new_height = 30
+    upscaled = lanczos_grayscale_image_example(original_array, new_height, new_width)
+    fft_upscale = calculate_fft(upscaled)
+
+    fig, axs = plt.subplots(2, 2)
+    axs[0, 0].set_title(f"{original_height}x{original_width}")
+    axs[0, 0].imshow(original_array, cmap=plt.get_cmap('gray'))
+    axs[0, 0].imshow(original_array, cmap=plt.get_cmap('gray'))
+    axs[0, 1].imshow(fft_original)
+    axs[1, 0].set_title(f"{new_height}x{new_width}")
+    axs[1, 0].imshow(upscaled, cmap=plt.get_cmap('gray'))
+    axs[1, 1].imshow(fft_upscale)
+    fig.tight_layout()
+    plt.show()
