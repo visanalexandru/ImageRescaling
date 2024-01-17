@@ -5,13 +5,12 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import matplotlib
 
-matplotlib.use('TkAgg')
+matplotlib.use("TkAgg")
 
 
 def lanczos_rgb_image_example():
-
     # Load the image
-    input_image_path = 'bunny.png'
+    input_image_path = "bunny.png"
     original_image = Image.open(input_image_path)
 
     # Convert the image to a NumPy array
@@ -36,7 +35,9 @@ def lanczos_rgb_image_example():
         at_x, at_y = np.meshgrid(at_x, at_y)
 
         # Apply Lanczos interpolation to each channel
-        upscaled_channel = lanczos.interpolate_lanczos2(original_array[:, :, channel], at_x, at_y, 2)
+        upscaled_channel = lanczos.interpolate_lanczos2_fast(
+            original_array[:, :, channel], at_x, at_y, 2
+        )
         upscaled_channel = np.clip(upscaled_channel, 0, 255)
         upscaled_channels.append(upscaled_channel)
 
