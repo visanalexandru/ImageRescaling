@@ -205,25 +205,25 @@ def lanczos_interpolate2_example():
     new_height = 120
     new_width = 300
 
+    # First generate the signal of shape (old_height, old_width)
     oy = np.linspace(-10, 10, old_height)
     ox = np.linspace(-10, 10, old_width)
     points_x, points_y = np.meshgrid(ox, oy)
-
-    # Now we get an image of shape (height, width)
     signal = signal_f(points_x, points_y)
 
+    # Then upscale it to (new_height, new_width)
     at_x = np.linspace(0, old_width, new_width)
     at_y = np.linspace(0, old_height, new_height)
     at_x, at_y = np.meshgrid(at_x, at_y)
 
-    downsampled = interpolate_lanczos2(signal, at_x, at_y, 2)
+    upscaled = interpolate_lanczos2(signal, at_x, at_y, 2)
 
     fig, axs = plt.subplots(2, 1)
 
     axs[0].set_title(f"{old_width}x{old_height}")
     axs[0].imshow(signal)
     axs[1].set_title(f"{new_width}x{new_height}")
-    axs[1].imshow(downsampled)
+    axs[1].imshow(upscaled)
     fig.tight_layout()
     plt.show()
 
