@@ -17,7 +17,7 @@ def calculate_fft(image):
     return 20 * np.log10(np.abs(np.fft.fftshift(np.fft.fft2(image))))
 
 
-def rescale_rgb_image(image, new_height, new_width):
+def rescale_rgb_image(image, new_height, new_width,a):
     # Get the dimension and channels of original images
     old_height = image.shape[0]
     old_width = image.shape[1]
@@ -28,10 +28,9 @@ def rescale_rgb_image(image, new_height, new_width):
         at_x = np.linspace(0, old_width, new_width)
         at_y = np.linspace(0, old_height, new_height)
         at_x, at_y = np.meshgrid(at_x, at_y)
-
         # Apply Lanczos interpolation to each channel
         upscaled_channel = lanczos.interpolate_lanczos2_fast(
-            image[:, :, channel], at_x, at_y, 2
+            image[:, :, channel], at_x, at_y, a
         )
         upscaled_channel = np.clip(upscaled_channel, 0, 255)
         upscaled_channels.append(upscaled_channel)
