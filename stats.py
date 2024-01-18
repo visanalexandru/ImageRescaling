@@ -1,4 +1,4 @@
-from rescale_image_example import rescale_rgb_image
+from rescale_image_example import rescale_rgb_image,rescale_greyscale_image
 import cv2
 import numpy as np
 import pandas as pd
@@ -95,7 +95,7 @@ def score(img):
     score, _, _, _ = piqe(img)
     return  score
 
-rescale_factors = [0.25,0.5,1,1.5]
+rescale_factors = [0.25,0.5,0.75,1,1.25,1.5]
 
 def plot_resizing_evaluation(methods, original_image):
     plt.figure(figsize=(8, 4))
@@ -125,6 +125,57 @@ def plot_resizing_evaluation(methods, original_image):
     plt.show()
 
 # Example usage:
-plot_resizing_evaluation(['Nearest','Cubic', 'Linear','Lanczos','Custom lanczos kernel_size=2','Custom lanczos kernel_size=8'], original_image)
+plot_resizing_evaluation(['Nearest','Cubic', 'Linear','Lanczos','Custom lanczos kernel_size=2','Custom lanczos kernel_size=4','Custom lanczos kernel_size=8'], original_image)
 
+exit(0)
+def create_custom_image(width=20, height=30):
+    image = np.zeros((height, width))
+
+    for i in range(min(width, height)):
+        image[i, i] = 255
+
+    half_height = height // 2
+    half_width = width // 2
+    image[half_height, :] = 255
+    image[:, half_width] = 255
+
+    for y in range(half_height):
+        for x in range(half_width):
+            image[y, x] = 0
+
+    for i in range(half_height):
+        for j in range(i + 1):
+            image[i, j] = 255
+
+    return image
+
+image = create_custom_image()
+import math
+
+imgs = {"Original" : image}
+
+factor = 2
+for method_name, resize_func in resizing_methods.items():
+    new_height = int(image.shape[1] * factor)
+    new_width = int(image.shape[0] * factor)
+    upscaled = resize_func(image, new_width, new_height)
+    imgs[method_name] = upscaled
+
+num_images = len(imgs)
+num_columns = 3
+num_rows = math.ceil(num_images / num_columns)
+
+fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, num_rows * 5))
+axes = axes.flatten()  
+
+for ax, (name, img) in zip(axes, imgs.items()):
+    ax.imshow(img, cmap='gray')
+    ax.set_title(name)
+    ax.axis('off')
+
+# Hide any unused subplots
+for ax in axes[len(imgs):]:
+    ax.axis('off')
+
+plt.show()
 
