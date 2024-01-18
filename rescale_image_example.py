@@ -17,7 +17,7 @@ def calculate_fft(image):
     return 20 * np.log10(np.abs(np.fft.fftshift(np.fft.fft2(image))))
 
 
-def rescale_greyscale_image(image, new_height, new_width):
+def rescale_greyscale_image(image, new_height, new_width, a):
     # Get the dimension of original image
     old_height, old_width = image.shape
 
@@ -26,28 +26,21 @@ def rescale_greyscale_image(image, new_height, new_width):
     at_x, at_y = np.meshgrid(at_x, at_y)
 
     # Apply Lanczos interpolation
-    upscaled_image = lanczos.interpolate_lanczos2_fast(image, at_x, at_y, 2)
+    upscaled_image = lanczos.interpolate_lanczos2_fast(image, at_x, at_y, a)
     upscaled_image = np.clip(upscaled_image, 0, 255)
     upscaled_image = upscaled_image.astype(np.uint8)
 
     return upscaled_image
 
 
-def rescale_rgb_image(image, new_height, new_width,a):
-    # Get the dimension and channels of original images
-    old_height = image.shape[0]
-    old_width = image.shape[1]
+def rescale_rgb_image(image, new_height, new_width, a):
+    # Get number of channels for original image
     ch_number = image.shape[2]
 
     upscaled_channels = []
     for channel in range(ch_number):
-        at_x = np.linspace(0, old_width, new_width)
-        at_y = np.linspace(0, old_height, new_height)
-        at_x, at_y = np.meshgrid(at_x, at_y)
         # Apply Lanczos interpolation to each channel
-        upscaled_channel = lanczos.interpolate_lanczos2_fast(
-            image[:, :, channel], at_x, at_y, a
-        )
+        upscaled_channel = rescale_greyscale_image(image[:, :, channel], new_height, new_width, a)
         upscaled_channel = np.clip(upscaled_channel, 0, 255)
         upscaled_channels.append(upscaled_channel)
 
@@ -61,11 +54,12 @@ if __name__ == "__main__":
     input_image_path = 'bunny.png'
     image = load_array_image(input_image_path)
 
+    a = 2
     new_width = 800
     new_height = 300
 
     # Rgb example
-    rgb_rescaled = rescale_rgb_image(image, new_height, new_width)
+    rgb_rescaled = rescale_rgb_image(image, new_height, new_width, a)
 
     fig, axs = plt.subplots(2, 1)
     axs[0].set_title(f"{image.shape[0]}x{image.shape[1]}")
@@ -78,10 +72,10 @@ if __name__ == "__main__":
     plt.show()
 
     # Greyscale example
-    image = load_array_image(input_image_path,  mode="greyscale")
+    image = load_array_image(input_image_path, mode="greyscale")
     fft_original = calculate_fft(image)
 
-    upscaled = rescale_greyscale_image(image, new_height, new_width)
+    upscaled = rescale_greyscale_image(image, new_height, new_width, a)
     fft_upscale = calculate_fft(upscaled)
 
     fig, axs = plt.subplots(2, 2)
