@@ -213,30 +213,34 @@ def lanczos_kernel_example():
 
 def lanczos_interpolate_example():
     # Generate some signal.
+    domain = np.linspace(-10, 10, 1000)
+
     signal_f = lambda x: np.sin(x) * 3 + ((x**2) / 10) + np.cos(x) / 10
-    smooth_signal = signal_f(np.linspace(-10, 10, 1000))
+    smooth_signal = signal_f(domain)
+    original_indices = np.arange(0, 1000, 1)
 
-    downsample_factor = 100
-    upsample_factor = 100
-    a = 4
-
-    # Downsample it.
-    downsampled_indices = np.arange(0, 1000, downsample_factor)
+    # Downsample it with a factor of 100.
+    downsampled_indices = np.append(np.arange(0, 1000, 100), 999)
     downsampled = smooth_signal[downsampled_indices]
 
-    # Upsample it.
-    at = np.linspace(0, len(downsampled), len(downsampled) * upsample_factor)
+    a = 4
+    at = np.arange(0, 10.5, 0.5)
     upsampled = interpolate_lanczos(downsampled, at, a)
 
-    fig, axs = plt.subplots(3, 1)
+    fig, axs = plt.subplots(2, 1)
+    axs[0].set_aspect(0.2, adjustable='box')
+    axs[0].locator_params(axis="x", nbins=20)
     axs[0].set_title("Original")
-    axs[0].plot(smooth_signal)
+    axs[0].plot(original_indices/100, smooth_signal, color=plt.cm.gray(0.7))
+    axs[0].stem(downsampled,  linefmt='black', basefmt='gray')
 
-    axs[1].set_title(f"{downsample_factor}x downsampled")
-    axs[1].plot(downsampled_indices, downsampled)
+    axs[1].set_aspect(0.2, adjustable='box')
+    axs[1].locator_params(axis="x", nbins=20)
+    axs[1].set_title("Upsampled")
+    axs[1].plot(original_indices/100, smooth_signal, color=plt.cm.gray(0.7))
+    axs[1].stem(at, upsampled, linefmt='black', basefmt='gray')
 
-    axs[2].set_title(f"{upsample_factor}x upsampled")
-    axs[2].plot(upsampled)
+    fig.savefig("1D_upsampling.pdf")
 
     fig.tight_layout()
     plt.show()
@@ -293,9 +297,94 @@ def lanczos_interpolate2_example():
     fig.tight_layout()
     plt.show()
 
+def DoRotation(xspan, yspan, RotRad=0):
+    """Generate a meshgrid and rotate it by RotRad radians."""
+    
+    # Clockwise, 2D rotation matrix
+    RotMatrix = np.array(
+        [[np.cos(RotRad), np.sin(RotRad)], [-np.sin(RotRad), np.cos(RotRad)]]
+    )
+    
+    x, y = np.meshgrid(xspan, yspan)
+    return np.einsum("ji, mni -> jmn", RotMatrix, np.dstack([x, y]))
+
+def meshgrid_upscale_demo():
+    fig, axs = plt.subplots(1, 2)
+
+    x = np.arange(0, 10)
+    y = np.arange(0, 10)
+    xx, yy = np.meshgrid(x, y)
+
+    axs[0].set_title("Original grid")
+    axs[0].set_aspect(1, adjustable='box')
+    axs[0].set_xlim((-0.5,9.5))
+    axs[0].locator_params(axis="x", nbins=18)
+    axs[0].locator_params(axis="y", nbins=18)
+    axs[0].plot((0, 9), (0,0), color=plt.cm.gray(0.7))
+    axs[0].plot((9, 9), (0,9), color=plt.cm.gray(0.7))
+    axs[0].plot((9, 0), (9,9), color=plt.cm.gray(0.7))
+    axs[0].plot((0, 0), (9,0), color=plt.cm.gray(0.7))
+    axs[0].plot(xx, yy, ".k")
+
+    x = np.arange(0, 9.5, 0.5)
+    y = np.arange(0, 9.5, 0.5)
+    xx, yy = np.meshgrid(x, y)
+
+    axs[1].set_title("Upscaled grid")
+    axs[1].set_aspect(1, adjustable='box')
+    axs[1].set_xlim((-0.5,9.5))
+    axs[1].locator_params(axis="x", nbins=10)
+    axs[1].locator_params(axis="y", nbins=10)
+    axs[1].plot((0, 9), (0,0), color=plt.cm.gray(0.7))
+    axs[1].plot((9, 9), (0,9), color=plt.cm.gray(0.7))
+    axs[1].plot((9, 0), (9,9), color=plt.cm.gray(0.7))
+    axs[1].plot((0, 0), (9,0), color=plt.cm.gray(0.7))
+    axs[1].plot(xx, yy, ".k")
+    plt.show()
+
+    fig.savefig("upscale.pdf")
+
+def meshgrid_rotate_demo():
+    fig, axs = plt.subplots(1, 2)
+
+    x = np.arange(0, 10)
+    y = np.arange(0, 10)
+    xx, yy = np.meshgrid(x, y)
+
+    axs[0].set_title("Original grid")
+    axs[0].set_aspect(1, adjustable='box')
+    axs[0].set_xlim((-0.5,9.5))
+    axs[0].locator_params(axis="x", nbins=18)
+    axs[0].locator_params(axis="y", nbins=18)
+    axs[0].plot((0, 9), (0,0), color=plt.cm.gray(0.7))
+    axs[0].plot((9, 9), (0,9), color=plt.cm.gray(0.7))
+    axs[0].plot((9, 0), (9,9), color=plt.cm.gray(0.7))
+    axs[0].plot((0, 0), (9,0), color=plt.cm.gray(0.7))
+    axs[0].plot(xx, yy, ".k")
+
+    xx, yy = DoRotation(x-5, y-5, 0.3) 
+    xx+=5
+    yy+=5
+
+    axs[1].set_title("Rotated grid")
+    axs[1].set_aspect(1, adjustable='box')
+    axs[1].set_xlim((-3,12))
+    axs[1].locator_params(axis="x", nbins=10)
+    axs[1].locator_params(axis="y", nbins=10)
+    axs[1].plot((0, 9), (0,0), color=plt.cm.gray(0.7))
+    axs[1].plot((9, 9), (0,9), color=plt.cm.gray(0.7))
+    axs[1].plot((9, 0), (9,9), color=plt.cm.gray(0.7))
+    axs[1].plot((0, 0), (9,0), color=plt.cm.gray(0.7))
+    axs[1].plot(xx, yy, ".k")
+    plt.show()
+
+    fig.savefig("rotation.pdf")
+
 
 if __name__ == "__main__":
     lanczos_kernel_example()
     lanczos_interpolate_example()
     lanczos_kernel2_example()
     lanczos_interpolate2_example()
+    meshgrid_rotate_demo()
+    meshgrid_upscale_demo()
